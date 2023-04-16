@@ -99,10 +99,24 @@ func (this *RaftNode) startElection() {
 				// You probably need to have implemented becomeFollower before this.
 
 				//-------------------------------------------------------------------------------------------/
-				if reply.Term > {
+				if reply.Term > args.Term {
 					// TODO
-				} else if reply.Term ==  {
+					args.Term = reply.Term
+					 this.currentTerm = reply.Term
+   					 this.becomeFollower(reply.Term)
+					 return 
+				} else if reply.Term == args.Term  && this.state == "Candidate"{
 					// TODO
+					if reply.VoteGranted {
+        					votesReceived++
+        					if votesReceived > len(this.peersIds)/2 {
+            						// The candidate has won the election.
+            						//this.becomeLeader()
+            					this.startLeader()
+								return
+            						
+        					}
+    					}
 				}
 				//-------------------------------------------------------------------------------------------/
 
@@ -117,9 +131,9 @@ func (this *RaftNode) startElection() {
 // becomeFollower sets a node to be a follower and resets its state.
 func (this *RaftNode) becomeFollower(term int) {
 	this.write_log("became Follower with term=%d; log=%v", term, this.log)
-
-	// IMPLEMENT becomeFollower; do you need to start a goroutine here, maybe?
-	//-------------------------------------------------------------------------------------------/
-	// TODO
-	//-------------------------------------------------------------------------------------------/
+	
+	// IMPLEMENT becomeFollower
+	this.currentTerm = term
+	this.votedFor = -1
+	this.state = "Follower"
 }

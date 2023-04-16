@@ -109,10 +109,19 @@ func (this *RaftNode) broadcastHeartbeats() {
 						// TODO
 						//-------------------------------------------------------------------------------------------/
 
+						replyIndex := prevLogIndex
+        				if replyIndex >= this.nextIndex[peerId] {
+           					this.nextIndex[peerId] = replyIndex + 1
+            				this.matchIndex[peerId] = replyIndex
+        				} 
+						
+
 						if (aeType == "Heartbeat" && LogHeartbeatMessages) || aeType == "AppendEntries" {
 							this.write_log("%s reply from NODE %d success: nextIndex := %v, matchIndex := %v", aeType, peerId, this.nextIndex, this.matchIndex)
 						}
 						oldCommitIndex := this.commitIndex
+						/*this.nextIndex[peerId] = args.PrevLogIndex + len(args.Entries) + 1
+						this.matchIndex[peerId] = args.PrevLogIndex + len(args.Entries)*/
 
 						// AppendEntries success on majority, now commit on leader (IF NOT HEARTBEAT)
 
@@ -125,12 +134,12 @@ func (this *RaftNode) broadcastHeartbeats() {
 								matchCount := 1 // Leader itself
 
 								for _, peerId := range this.peersIds {
-									if { // TODO  // When should you update matchCount?
+									if this.matchIndex[peerId] >= i{ // TODO  // When should you update matchCount?
 										matchCount++
 									}
 								}
 
-								if { // TODO  // When should you update commitIndex to i?
+								if matchCount > len(this.peersIds)/2 { // TODO  // When should you update commitIndex to i?
 									this.commitIndex = i
 								}
 							}
@@ -152,6 +161,8 @@ func (this *RaftNode) broadcastHeartbeats() {
 						//-------------------------------------------------------------------------------------------/
 						// TODO
 						//-------------------------------------------------------------------------------------------/
+						
+						this.nextIndex[peerId] -= 1
 
 						if (aeType == "Heartbeat" && LogHeartbeatMessages) || aeType == "AppendEntries" {
 							this.write_log("%s reply from NODE %d was failure; Hence, decrementing its nextIndex", aeType, peerId)
